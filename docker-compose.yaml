@@ -1,0 +1,27 @@
+
+
+services:
+  db_postgres:
+    build: ./bd_postgres/
+    image: bd_postgres_tcc_usp
+    container_name: db_postgres_tcc_usp
+    restart: always
+    ports:
+      - "9000:9000"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - ./config/db.env
+    networks:
+      - tcc_usp
+
+
+  
+
+volumes:  
+  pgdata:
+networks:
+  tcc_usp:
+
+  
