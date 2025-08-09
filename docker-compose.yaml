@@ -7,7 +7,7 @@ services:
     container_name: db_postgres_tcc_usp
     restart: always
     ports:
-      - "9000:9000"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -15,6 +15,23 @@ services:
       - ./config/db.env
     networks:
       - tcc_usp
+
+  back-end:
+    build: ./usp/
+    image: back-end_tcc_usp
+    container_name: back-end_tcc_usp
+    restart: always
+    ports:
+      - "9001:9001"
+    depends_on:
+      - db_postgres
+    networks:
+      - tcc_usp
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db_postgres:5432/tcc_usp
+      SPRING_DATASOURCE_USERNAME: tcc
+      SPRING_DATASOURCE_PASSWORD: secret
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
 
   
