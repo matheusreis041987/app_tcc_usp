@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciamento de Processos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2 { color: #333; }
+        form, .actions { margin-bottom: 20px; }
+        label { display: block; margin-top: 10px; }
+        input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 10px; padding: 10px 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h2>Cadastro de Processo</h2>
+    <form id="processoForm">
+        <label for="id">ID (para atualizar):</label>
+        <input type="number" id="id" name="id">
+
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome">
+
+        <label for="controle">Controle:</label>
+        <input type="text" id="controle" name="controle">
+
+        <label for="descricaoControle">Descrição do Controle:</label>
+        <textarea id="descricaoControle" name="descricaoControle"></textarea>
+
+        <label for="dataCriacao">Data de Criação:</label>
+        <input type="date" id="dataCriacao" name="dataCriacao">
+
+        <label for="dataAtualizacao">Data de Atualização:</label>
+        <input type="date" id="dataAtualizacao" name="dataAtualizacao">
+
+        <label for="ehDadoSensivel">É Dado Sensível:</label>
+        <input type="checkbox" id="ehDadoSensivel" name="ehDadoSensivel">
+
+        <label for="nomeOrgTransf">Nome da Organização Transferente:</label>
+        <input type="text" id="nomeOrgTransf" name="nomeOrgTransf">
+
+        <label for="paisOrgTransf">País da Organização Transferente:</label>
+        <input type="text" id="paisOrgTransf" name="paisOrgTransf">
+
+        <label for="dadoOrgTransf">Dado da Organização Transferente:</label>
+        <input type="text" id="dadoOrgTransf" name="dadoOrgTransf">
+
+        <label for="proCompra">Processo de Compra:</label>
+        <input type="text" id="proCompra" name="proCompra">
+
+        <label for="objProcCompra">Objeto do Processo de Compra:</label>
+        <input type="text" id="objProcCompra" name="objProcCompra">
+
+        <label for="responsavel">ID do Responsável:</label>
+        <input type="number" id="responsavel" name="responsavel">
+
+        <button type="button" onclick="salvarProcesso()">Cadastrar</button>
+        <button type="button" onclick="atualizarProcesso()">Atualizar</button>
+    </form>
+
+    <div class="actions">
+        <button onclick="buscarTodosProcessos()">Buscar Todos os Processos</button>
+        <input type="number" id="buscarId" placeholder="ID do Processo">
+        <button onclick="buscarProcessoPorId()">Buscar por ID</button>
+    </div>
+
+    <table id="tabelaProcessos">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Controle</th>
+                <th>Descrição</th>
+                <th>Data Criação</th>
+                <th>Data Atualização</th>
+                <th>Responsável</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const baseUrl = "http://localhost:9001/api/processo";
+
+        function salvarProcesso() {
+            const processo = coletarDadosFormulario();
+            fetch(baseUrl + "/salvar-processo", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(processo)
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("Processo cadastrado com sucesso!");
+                buscarTodosProcessos();
+            });
+        }
+
+        function atualizarProcesso() {
+            const processo = coletarDadosFormulario();
+            if (!processo.id) {
+                alert("Informe o ID para atualizar.");
+                return;
+            }
+            fetch(baseUrl + "/atualizar-processo/" + processo.id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(processo)
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("Processo atualizado com sucesso!");
+                buscarTodosProcessos();
+            });
+        }
+
+        function deletarProcesso(id) {
+            fetch(baseUrl + "/deletar-processo/" + id, {
+                method: "DELETE"
+            })
+            .then(() => {
+                alert("Processo deletado.");
+                buscarTodosProcessos();
+            });
+        }
+
+        function buscarTodosProcessos() {
+            fetch(baseUrl + "/buscar-processos")
+            .then(res => res.json())
+            .then(data => preencherTabela(data));
+        }
+
+        function buscarProcessoPorId() {
+            const id = document.getElementById("buscarId").value;
+            if (!id) {
+                alert("Informe o ID.");
+                return;
+            }
+            fetch(baseUrl + "/buscar-processo-id?id=" + id)
+            .then(res => res.json())
+            .then(data => preencherTabela(data));
+        }
+
+        function preencherTabela(processos) {
+            const tbody = document.querySelector("#tabelaProcessos tbody");
+            tbody.innerHTML = "";
+            processos.forEach(p => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.nome}</td>
+                    <td>${p.controle}</td>
+                    <td>${p.descricaoControle}</td>
+                    <td>${p.dataCriacao}</td>
+                    <td>${p.dataAtualizacao}</td>
+                    <td>${p.responsavel}</td>
+                    <td>
+                        <button onclick="carregarProcesso(${p.id})">Editar</button>
+                        <button onclick="deletarProcesso(${p.id})">Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function carregarProcesso(id) {
+            fetch(baseUrl + "/buscar-processo-id?id=" + id)
+            .then(res => res.json())
+            .then(data => {
+                if (data.length > 0) {
+                    const p = data[0];
+                    document.getElementById("id").value = p.id;
+                    document.getElementById("nome").value = p.nome;
+                    document.getElementById("controle").value = p.controle;
+                    document.getElementById("descricaoControle").value = p.descricaoControle;
+                    document.getElementById("dataCriacao").value = p.dataCriacao;
+                    document.getElementById("dataAtualizacao").value = p.dataAtualizacao;
+                    document.getElementById("ehDadoSensivel").checked = p.ehDadoSensivel;
+                    document.getElementById("nomeOrgTransf").value = p.nomeOrgTransf;
+                    document.getElementById("paisOrgTransf").value = p.paisOrgTransf;
+                    document.getElementById("dadoOrgTransf").value = p.dadoOrgTransf;
+                    document.getElementById("proCompra").value = p.proCompra;
+                    document.getElementById("objProcCompra").value = p.objProcCompra;
+                    document.getElementById("responsavel").value = p.responsavel;
+                }
+            });
+        }
+
+        function coletarDadosFormulario() {
+            return {
+                id: document.getElementById("id").value || null,
+                nome: document.getElementById("nome").value,
+                controle: document.getElementById("controle").value,
+                descricaoControle: document.getElementById("descricaoControle").value,
+                dataCriacao: document.getElementById("dataCriacao").value,
+                dataAtualizacao: document.getElementById("dataAtualizacao").value,
+                ehDadoSensivel: document.getElementById("ehDadoSensivel").checked,
+                nomeOrgTransf: document.getElementById("nomeOrgTransf").value,
+                paisOrgTransf: document.getElementById("paisOrgTransf").value,
+                dadoOrgTransf: document.getElementById("dadoOrgTransf").value,
+                proCompra: document.getElementById("proCompra").value,
+                objProcCompra: document.getElementById("objProcCompra").value,
+                responsavel: document.getElementById("responsavel").value
+            };
+        }
+
+        // Carregar todos os processos ao iniciar
+        buscarTodosProcessos();
+    </script>
+</body>
+</html>

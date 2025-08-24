@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Responsável</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form, table { margin-bottom: 30px; }
+        input, select { margin: 5px; padding: 5px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        button { margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Cadastro de Responsável</h1>
+    <form id="responsavelForm">
+        <input type="hidden" id="id">
+        <input type="text" id="nome" placeholder="Nome" required>
+        <input type="text" id="endereco" placeholder="Endereço">
+        <input type="text" id="cep" placeholder="CEP">
+        <input type="text" id="cidade" placeholder="Cidade">
+        <input type="text" id="uf" placeholder="UF">
+        <button type="submit">Salvar</button>
+    </form>
+
+    <h2>Lista de Responsáveis</h2>
+    <table id="responsavelTable">
+        <thead>
+            <tr>
+                <th>ID</th><th>Nome</th><th>Endereço</th><th>CEP</th><th>Cidade</th><th>UF</th><th>Ações</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const apiUrl = "http://localhost:9001/api/responsavel";
+
+        async function fetchResponsaveis() {
+            const res = await fetch(apiUrl + "/buscar-responsavel");
+            const data = await res.json();
+            const tbody = document.querySelector("#responsavelTable tbody");
+            tbody.innerHTML = "";
+            data.forEach(r => {
+                const row = `<tr>
+                    <td>${r.id}</td><td>${r.nome}</td><td>${r.endereco}</td><td>${r.cep}</td><td>${r.cidade}</td><td>${r.uf}</td>
+                    <td>
+                        <button onclick='editResponsavel(${JSON.stringify(r)})'>Editar</button>
+                        <button onclick='deleteResponsavel(${r.id})'>Excluir</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        document.getElementById("responsavelForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const id = document.getElementById("id").value;
+            const dto = {
+                nome: document.getElementById("nome").value,
+                endereco: document.getElementById("endereco").value,
+                cep: document.getElementById("cep").value,
+                cidade: document.getElementById("cidade").value,
+                uf: document.getElementById("uf").value
+            };
+            let method = "POST";
+            let url = apiUrl + "/salvar-responsavel";
+            if (id) {
+                dto.id = parseInt(id);
+                method = "PUT";
+                url = apiUrl + "/atualizar-responsavel/" + id;
+            }
+            await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dto)
+            });
+            this.reset();
+            fetchResponsaveis();
+        });
+
+        function editResponsavel(r) {
+            document.getElementById("id").value = r.id;
+            document.getElementById("nome").value = r.nome;
+            document.getElementById("endereco").value = r.endereco;
+            document.getElementById("cep").value = r.cep;
+            document.getElementById("cidade").value = r.cidade;
+            document.getElementById("uf").value = r.uf;
+        }
+
+        async function deleteResponsavel(id) {
+            await fetch(apiUrl + "/deletar-responsavel/" + id, { method: "DELETE" });
+            fetchResponsaveis();
+        }
+
+        fetchResponsaveis();
+    </script>
+</body>
+</html>
