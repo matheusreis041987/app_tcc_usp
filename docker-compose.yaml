@@ -32,7 +32,13 @@ services:
       SPRING_DATASOURCE_USERNAME: tcc
       SPRING_DATASOURCE_PASSWORD: secret
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+<<<<<<< HEAD
  
+=======
+
+
+  
+>>>>>>> d49786edd1bb425ad4c1888cf88dd9ee63b82b0b
 
 volumes:  
   pgdata:
